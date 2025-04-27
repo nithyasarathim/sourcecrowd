@@ -9,22 +9,22 @@ const Header = () => {
   return (
     <div className="bg-black flex items-center justify-between px-8 h-20 w-full">
       <img src={Logo} alt="Logo" className="w-50 h-fit" />
-      <div className="text-green-50 flex items-center space-x-8">
+      <div className="text-[#c1ff72] flex items-center space-x-8">
         
         <Link to="/dashboard">
-          <h1 className={`${isActive('/dashboard') ? 'text-green-500 border-green-500 border-b-2' : 'hover:text-green-300'}`}>
+          <h1 className={`${isActive('/dashboard') ? 'text-[#c1ff72] border-[#c1ff72] border-b-2' : 'hover:text-[#c1ff72]'}`}>
             Dashboard
           </h1>
         </Link>
         
         <Link to="/campaigns">
-          <h1 className={`${isActive('/campaigns') ? 'text-green-500 border-green-500 border-b-2' : 'hover:text-green-300'}`}>
+          <h1 className={`${isActive('/campaigns') ? 'text-[#c1ff72] border-[#c1ff72] border-b-2' : 'hover:text-[#c1ff72]'}`}>
             Campaigns
           </h1>
         </Link>
 
         <Link to="/profile">
-          <div className={`flex items-center space-x-2 rounded-lg px-4 py-1 ${isActive('/profile') ? 'bg-green-700' : 'bg-green-600 hover:bg-green-700'}`}>
+          <div className={`flex items-center space-x-2 text-black rounded-lg px-4 py-1 ${isActive('/profile') ? 'bg-[#c1ff72]' : 'bg-[#c1ff72] hover:bg-[#c1ff72]'}`}>
             <h1>Profile</h1>
           </div>
         </Link>
