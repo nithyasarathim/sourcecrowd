@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Mail, User, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Lock, Mail, User, Eye, EyeOff } from 'lucide-react';
 import Logo from '../assets/logo.png';
 
 const AuthPage = () => {
@@ -10,13 +10,7 @@ const AuthPage = () => {
   return (
     <div className="min-h-screen bg-black text-green-100 flex flex-col">
       <header className="p-4">
-        <button 
-          onClick={() => navigate('/')} 
-          className="flex items-center text-[#c1ff72] hover:text-green-300"
-        >
-          <ArrowLeft size={20} className="mr-2" />
-          Back to home
-        </button>
+        
       </header>
 
       <div className="flex-grow flex items-center justify-center p-4">
@@ -84,8 +78,9 @@ const LoginForm = ({ logo }) => {
 
     setLoading(true);
     try {
-      const response = await mockLogin(formData, logo);
-      localStorage.setItem('token', response.token);
+      const response = await loginUser(formData);
+      // Store user data in localStorage instead of token
+      localStorage.setItem('user', JSON.stringify(response.user));
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.');
@@ -203,8 +198,13 @@ const SignupForm = ({ logo }) => {
 
     setLoading(true);
     try {
-      const response = await mockSignup(formData, logo);
-      localStorage.setItem('token', response.token);
+      const response = await signUpUser({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password
+      });
+      // Store user data in localStorage instead of token
+      localStorage.setItem('user', JSON.stringify(response.user));
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Signup failed. Please try again.');
@@ -315,22 +315,41 @@ const SignupForm = ({ logo }) => {
   );
 };
 
-const mockLogin = async (credentials, logo) => {
-  console.log('Login attempt with logo:', logo);
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      resolve({ token: 'mock-jwt-token', user: { id: 1, email: credentials.email } });
-    }, 1000);
+// Updated API functions to match backend
+const loginUser = async (credentials) => {
+  const response = await fetch('http://localhost:9000/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(credentials)
   });
+
+  const data = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(data.error || 'Login failed');
+  }
+
+  return data;
 };
 
-const mockSignup = async (userData, logo) => {
-  console.log('Signup attempt with logo:', logo);
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      resolve({ token: 'mock-jwt-token', user: { id: 2, email: userData.email } });
-    }, 1500);
+const signUpUser = async (userData) => {
+  const response = await fetch('http://localhost:9000/auth/signup', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(userData)
   });
+
+  const data = await response.json();
+  LocalStorage.setItem('user', JSON.stringify(userData));
+  if (!response.ok) {
+    throw new Error(data.error || 'Signup failed');
+  }
+
+  return data;
 };
 
 export default AuthPage;

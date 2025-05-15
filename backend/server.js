@@ -6,6 +6,7 @@ const cors = require('cors');
 const app = express();
 
 const campaignRoutes = require('./router/campaignRoutes');
+const authRoutes = require('./router/authRoutes');
 
 
 app.use(express.json());
@@ -13,6 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 app.use('/campaign', campaignRoutes);
+app.use('/auth', authRoutes);
 
 mongoose.connect("mongodb://localhost:27017/sourcecrowd")
   .then(() => {
