@@ -1,6 +1,5 @@
 import React from 'react'
 import Header from '../component/header';
-import { useLocation } from 'react-router-dom';
 import DashboardDetailComponent from '../component/DashboardComponent/DashboardDetailComponent';
 
 const DashboardPage = () => {

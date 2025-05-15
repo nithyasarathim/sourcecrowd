@@ -1,9 +1,8 @@
 import React from 'react'
-import Logo from './assets/logo.png'
-import Header from './component/header';
 import DashboardPage from './pages/DashboardPage';
-import CampaignPage from './pages/CampaignPage';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import CampaignListPage from './pages/CampaignListPage';
+import CampaignDetailsPage from './pages/CampaignDetailPage';
+import { Routes, Route } from 'react-router-dom';
 
 const App = () => {
   return (
@@ -11,7 +10,8 @@ const App = () => {
       <Routes>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/campaigns" element={<CampaignPage />} />
+        <Route path="/campaigns" element={<CampaignListPage />} />
+        <Route path="/campaigns/:id" element={<CampaignDetailsPage />} />
       </Routes>
     </div>
   )
