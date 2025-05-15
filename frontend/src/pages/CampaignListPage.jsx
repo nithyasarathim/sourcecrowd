@@ -12,7 +12,9 @@ const CampaignListPage = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const navigate = useNavigate();
 
-  const userId="12345";
+  const rawUser = localStorage.getItem('user');
+  const user = JSON.parse(rawUser);
+  const userEmail = user?.email;
 
   const [formData, setFormData] = useState({
     name: '',
@@ -20,6 +22,7 @@ const CampaignListPage = () => {
     description: '',
     moneyUsage: '',
     amountNeeded: '',
+    email: userEmail,
     website: '',
     endDate: '',
     categories: [],
@@ -152,7 +155,8 @@ const CampaignListPage = () => {
       amountNeeded: '',
       website: '',
       endDate: '',
-      categories: []
+      categories: [],
+      email: userEmail,
     });
   };
 
@@ -160,7 +164,6 @@ const CampaignListPage = () => {
     e.preventDefault();
     
     try {
-      // Prepare the data exactly as backend expects
       const campaignData = {
         name: formData.name,
         pitch: formData.pitch,
@@ -170,7 +173,7 @@ const CampaignListPage = () => {
         website: formData.website,
         endDate: new Date(formData.endDate).toISOString(),
         categories: formData.categories,
-        creator: userId // Make sure this is a valid user ID
+        email: userEmail
       };
   
       console.log('Submitting campaign data:', campaignData); // Debug log
@@ -210,7 +213,8 @@ const CampaignListPage = () => {
         amountNeeded: '',
         website: '',
         endDate: '',
-        categories: []
+        categories: [],
+        email: userEmail,
       });
       setError(null);
       

@@ -62,9 +62,9 @@ const campaignSchema = new mongoose.Schema({
     enum: ['draft', 'active', 'finished'],
     default: 'draft'
   },
-  creator: {
-    type: String,
-    default: null
+  email: {
+    type : String,
+    required: true,
   },
   startDate: {
     type: Date,

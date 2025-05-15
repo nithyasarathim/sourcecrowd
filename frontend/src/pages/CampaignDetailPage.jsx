@@ -5,13 +5,17 @@ import Header from '../component/header';
 
 const CampaignDetailPage = () => {
   const { id } = useParams();
+  const rawUser = localStorage.getItem('user');
+  const user = rawUser ? JSON.parse(rawUser) : null;
   const navigate = useNavigate();
+
   const [campaign, setCampaign] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [contributionAmount, setContributionAmount] = useState(0);
   const [contributorName, setContributorName] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [contributorEmail, setContributorEmail] = useState(user?.email || '');
   const [cardDetails, setCardDetails] = useState({
     number: '',
     name: '',
@@ -45,7 +49,8 @@ const CampaignDetailPage = () => {
           website: data.website || '',
           status: data.status || 'active',
           endDate: data.endDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          categories: data.categories || []
+          categories: data.categories || [],
+          email: data.email || '',
         };
         
         setCampaign(processedData);
@@ -210,6 +215,7 @@ const CampaignDetailPage = () => {
   const contributions = campaign.contributions || [];
   const sortedContributors = [...contributions].sort((a, b) => b.amount - a.amount);
   const topContributors = sortedContributors.slice(0, 3);
+  console.log(campaign);
 
   return (
     <div className="bg-black min-h-screen text-green-100">
@@ -238,6 +244,8 @@ const CampaignDetailPage = () => {
                   <p className="text-lg text-gray-300 italic mb-4">
                     "{campaign.pitch}"
                   </p>
+                  <div className='flex justify-between items-center'>
+                  <p className='text-sm text-[#c1ff72]'>{campaign.email}</p>
                   {campaign.website && (
                     <div className="flex items-center bg-gray-800/50 rounded-lg p-3 w-fit">
                       <Globe size={14} className="text-[#c1ff72] mr-2" />
@@ -251,6 +259,7 @@ const CampaignDetailPage = () => {
                       </a>
                     </div>
                   )}
+                  </div>
                 </div>
               </div>
 

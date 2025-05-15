@@ -79,7 +79,6 @@ const LoginForm = ({ logo }) => {
     setLoading(true);
     try {
       const response = await loginUser(formData);
-      // Store user data in localStorage instead of token
       localStorage.setItem('user', JSON.stringify(response.user));
       navigate('/dashboard');
     } catch (err) {
@@ -203,9 +202,7 @@ const SignupForm = ({ logo }) => {
         email: formData.email,
         password: formData.password
       });
-      // Store user data in localStorage instead of token
-      localStorage.setItem('user', JSON.stringify(response.user));
-      navigate('/dashboard');
+      window.location.reload();
     } catch (err) {
       setError(err.message || 'Signup failed. Please try again.');
     } finally {
@@ -344,7 +341,7 @@ const signUpUser = async (userData) => {
   });
 
   const data = await response.json();
-  LocalStorage.setItem('user', JSON.stringify(userData));
+  localStorage.setItem('user', JSON.stringify(userData));
   if (!response.ok) {
     throw new Error(data.error || 'Signup failed');
   }
