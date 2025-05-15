@@ -19,7 +19,7 @@ const contributionSchema = new mongoose.Schema({
 }, { _id: false });
 
 const campaignSchema = new mongoose.Schema({
-  
+
   name: {
     type: String,
     required: true,
@@ -63,8 +63,7 @@ const campaignSchema = new mongoose.Schema({
     default: 'draft'
   },
   creator: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: String,
     default: null
   },
   startDate: {

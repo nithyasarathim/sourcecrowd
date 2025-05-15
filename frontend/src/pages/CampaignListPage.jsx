@@ -39,7 +39,7 @@ const CampaignListPage = () => {
     const fetchCampaigns = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:8000/campaign/all');
+        const response = await fetch('http://localhost:9000/campaign/all');
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -175,7 +175,7 @@ const CampaignListPage = () => {
   
       console.log('Submitting campaign data:', campaignData); // Debug log
   
-      const response = await fetch('http://localhost:8000/campaign/create', {
+      const response = await fetch('http://localhost:9000/campaign/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

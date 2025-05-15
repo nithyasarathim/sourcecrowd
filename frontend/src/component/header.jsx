@@ -22,13 +22,6 @@ const Header = () => {
             Campaigns
           </h1>
         </Link>
-
-        <Link to="/profile">
-          <div className={`flex items-center space-x-2 text-black rounded-lg px-4 py-1 ${isActive('/profile') ? 'bg-[#c1ff72]' : 'bg-[#c1ff72] hover:bg-[#c1ff72]'}`}>
-            <h1>Profile</h1>
-          </div>
-        </Link>
-
       </div>
     </div>
   );

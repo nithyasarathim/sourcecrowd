@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { X, Zap, Globe, Users, Calendar, Award } from 'lucide-react';
+import { X, Zap, Globe, Users, Calendar, Award, CreditCard } from 'lucide-react';
 import Header from '../component/header';
 
 const CampaignDetailPage = () => {
@@ -11,14 +11,20 @@ const CampaignDetailPage = () => {
   const [error, setError] = useState(null);
   const [contributionAmount, setContributionAmount] = useState(0);
   const [contributorName, setContributorName] = useState('');
-
-   // Replace with actual user ID from authentication context or state
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [cardDetails, setCardDetails] = useState({
+    number: '',
+    name: '',
+    expiry: '',
+    cvv: ''
+  });
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
 
   useEffect(() => {
     const fetchCampaign = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:8000/campaign/${id}`);
+        const response = await fetch(`http://localhost:9000/campaign/${id}`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -55,18 +61,104 @@ const CampaignDetailPage = () => {
     fetchCampaign();
   }, [id, navigate]);
 
+  const calculatePercentageAmount = (percentage) => {
+    if (!campaign) return 0;
+    const remainingAmount = campaign.amountNeeded - campaign.amountCollected;
+    return Math.round((remainingAmount * percentage) / 100);
+  };
+
+  const validateCardDetails = () => {
+    const errors = {};
+    
+    if (!cardDetails.number.replace(/\s/g, '').match(/^\d{13,16}$/)) {
+      errors.number = 'Enter a valid 13-16 digit card number';
+    }
+    
+    if (!cardDetails.name.trim()) {
+      errors.name = 'Cardholder name is required';
+    }
+    
+    if (!cardDetails.expiry.match(/^(0[1-9]|1[0-2])\/?([0-9]{2})$/)) {
+      errors.expiry = 'Enter valid expiry (MM/YY)';
+    }
+    
+    if (!cardDetails.cvv.match(/^\d{3,4}$/)) {
+      errors.cvv = 'Enter valid 3 or 4 digit CVV';
+    }
+    
+    return {
+      isValid: Object.keys(errors).length === 0,
+      errors
+    };
+  };
+
+  const handleCardInputChange = (e) => {
+    const { name, value } = e.target;
+    
+    if (name === 'number') {
+      const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+      let formatted = '';
+      for (let i = 0; i < v.length; i++) {
+        if (i % 4 === 0 && i > 0) formatted += ' ';
+        formatted += v[i];
+      }
+      setCardDetails(prev => ({ ...prev, [name]: formatted }));
+      return;
+    }
+    
+    if (name === 'expiry') {
+      const v = value.replace(/[^0-9]/g, '');
+      let formatted = v;
+      if (v.length >= 3) {
+        formatted = `${v.substring(0, 2)}/${v.substring(2)}`;
+      }
+      setCardDetails(prev => ({ ...prev, [name]: formatted }));
+      return;
+    }
+    
+    setCardDetails(prev => ({ ...prev, [name]: value }));
+  };
+
+  const processPayment = async () => {
+    const { isValid, errors } = validateCardDetails();
+    if (!isValid) {
+      setError('Please fix card errors before submitting');
+      return;
+    }
+
+    setPaymentProcessing(true);
+    setError(null);
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      await handleContribute();
+      setShowPaymentModal(false);
+      setCardDetails({
+        number: '',
+        name: '',
+        expiry: '',
+        cvv: ''
+      });
+    } catch (err) {
+      console.error('Payment processing error:', err);
+      setError('Payment failed. Please try again.');
+    } finally {
+      setPaymentProcessing(false);
+    }
+  };
+
   const handleContribute = async () => {
     if (!campaign || contributionAmount <= 0 || !contributorName.trim()) return;
 
     try {
-      const response = await fetch(`http://localhost:8000/campaign/update/${id}`, {
+      const response = await fetch(`http://localhost:9000/campaign/update/${id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           amount: contributionAmount,
-          contributorName: contributorName
+          contributorName: contributorName.trim()
         })
       });
 
@@ -86,12 +178,6 @@ const CampaignDetailPage = () => {
       console.error('Error submitting contribution:', err);
       setError('Failed to submit contribution. Please try again.');
     }
-  };
-
-  const calculatePercentageAmount = (percentage) => {
-    if (!campaign) return 0;
-    const remainingAmount = campaign.amountNeeded - campaign.amountCollected;
-    return Math.round((remainingAmount * percentage) / 100);
   };
 
   if (loading) {
@@ -139,7 +225,6 @@ const CampaignDetailPage = () => {
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Campaign Details */}
           <div className="lg:col-span-2">
             <div className="max-w-2xl my-10 mx-auto">
               <div className="flex items-start mb-10">
@@ -250,7 +335,6 @@ const CampaignDetailPage = () => {
             </div>
           </div>
 
-          {/* Desktop Contribution Panel (hidden on mobile) */}
           <div className="hidden lg:block">
             <div className="flex-col top-0 max-w-xl pt-6">
               <h3 className="text-xl font-bold text-[#c1ff72] mb-6">Contribute</h3>
@@ -305,7 +389,11 @@ const CampaignDetailPage = () => {
                 </div>
 
                 <button
-                  onClick={handleContribute}
+                  onClick={() => {
+                    if (contributionAmount > 0 && contributorName.trim()) {
+                      setShowPaymentModal(true);
+                    }
+                  }}
                   disabled={!contributionAmount || contributionAmount <= 0 || !contributorName.trim()}
                   className={`w-full py-3 rounded-lg font-bold text-sm transition-all ${
                     contributionAmount > 0 && contributorName.trim()
@@ -398,7 +486,122 @@ const CampaignDetailPage = () => {
           </div>
         </div>
 
-        {/* Mobile Contribution Button (shown only on mobile) */}
+        {/* Payment Modal */}
+        {showPaymentModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-900 rounded-xl w-full max-w-md border border-gray-700 shadow-2xl">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-[#c1ff72]">Payment Details</h2>
+                  <button 
+                    onClick={() => setShowPaymentModal(false)}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Card Number
+                    </label>
+                    <input
+                      type="text"
+                      name="number"
+                      value={cardDetails.number}
+                      onChange={handleCardInputChange}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 focus:border-[#c1ff72] focus:ring-2 focus:ring-[#c1ff72]/30 focus:outline-none text-white"
+                      placeholder="1234 5678 9012 3456"
+                      maxLength={19}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Cardholder Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={cardDetails.name}
+                      onChange={handleCardInputChange}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 focus:border-[#c1ff72] focus:ring-2 focus:ring-[#c1ff72]/30 focus:outline-none text-white"
+                      placeholder="John Doe"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                        Expiry Date
+                      </label>
+                      <input
+                        type="text"
+                        name="expiry"
+                        value={cardDetails.expiry}
+                        onChange={handleCardInputChange}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 focus:border-[#c1ff72] focus:ring-2 focus:ring-[#c1ff72]/30 focus:outline-none text-white"
+                        placeholder="MM/YY"
+                        maxLength={5}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                        CVV
+                      </label>
+                      <input
+                        type="text"
+                        name="cvv"
+                        value={cardDetails.cvv}
+                        onChange={handleCardInputChange}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 focus:border-[#c1ff72] focus:ring-2 focus:ring-[#c1ff72]/30 focus:outline-none text-white"
+                        placeholder="123"
+                        maxLength={4}
+                      />
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="text-red-400 text-sm mt-2">
+                      {error}
+                    </div>
+                  )}
+
+                  <div className="pt-4">
+                    <button
+                      onClick={processPayment}
+                      disabled={paymentProcessing}
+                      className={`w-full py-3 rounded-lg font-bold flex items-center justify-center ${
+                        paymentProcessing
+                          ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                          : 'bg-[#c1ff72] text-black hover:bg-green-300'
+                      }`}
+                    >
+                      {paymentProcessing ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard className="mr-2" size={18} />
+                          Pay ${contributionAmount.toLocaleString()}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Contribution Button */}
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 p-3">
           <div className="max-w-md mx-auto space-y-2">
             <input
@@ -409,7 +612,11 @@ const CampaignDetailPage = () => {
               placeholder="Your name"
             />
             <button
-              onClick={handleContribute}
+              onClick={() => {
+                if (contributionAmount > 0 && contributorName.trim()) {
+                  setShowPaymentModal(true);
+                }
+              }}
               disabled={!contributionAmount || contributionAmount <= 0 || !contributorName.trim()}
               className={`w-full py-2 rounded-lg font-medium text-sm transition-all ${
                 contributionAmount > 0 && contributorName.trim()
